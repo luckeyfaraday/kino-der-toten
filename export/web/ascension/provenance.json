@@ -1,0 +1,66 @@
+{
+  "map": "zombie_cosmodrome",
+  "stage": "map-only",
+  "sources": [
+    {
+      "path": "zone/Common/zombie_cosmodrome.ff",
+      "bytes": 53103328,
+      "sha256": "2680eb4a44ced7d8aea7f85acd12c888c42e337c4711adc050870087da795f04"
+    },
+    {
+      "path": "zone/English/en_zombie_cosmodrome.ff",
+      "bytes": 32064,
+      "sha256": "1fee46ec85759b620339b89ab21a52c2e3996e71451c1387b85be4cd6b4454bc"
+    },
+    {
+      "path": "zone/Common/zombie_cosmodrome_patch.ff",
+      "bytes": 392032,
+      "sha256": "0085ac3f2f381734451a0a6899550770d3e9615b9ecc98b0cd570ab3c474b37c"
+    }
+  ],
+  "entities": 2973,
+  "staticPlacements": 5902,
+  "scriptModels": 174,
+  "missingModels": [],
+  "textures": 429,
+  "untexturedMaterials": [
+    [
+      "wc/shadowcaster"
+    ],
+    [
+      "t5_weapon_pm63_world:mc/mtl_player_icon",
+      "t5_weapon_m14_world:mc/mtl_player_icon",
+      "t5_weapon_beretta682_world:mc/mtl_player_icon",
+      "t5_weapon_m16a1_world:mc/mtl_player_icon",
+      "t5_weapon_mp5_world:mc/mtl_player_icon",
+      "t5_weapon_ak74u_world:mc/mtl_player_icon",
+      "t5_weapon_mpl_world:mc/mtl_player_icon",
+      "t5_weapon_ithaca_world:mc/mtl_player_icon"
+    ],
+    [
+      "t5_weapon_pm63_world:mc/mtl_clan_tag",
+      "t5_weapon_m14_world:mc/mtl_clan_tag",
+      "t5_weapon_beretta682_world:mc/mtl_clan_tag",
+      "t5_weapon_m16a1_world:mc/mtl_clan_tag",
+      "t5_weapon_mp5_world:mc/mtl_clan_tag",
+      "t5_weapon_ak74u_world:mc/mtl_clan_tag",
+      "t5_weapon_mpl_world:mc/mtl_clan_tag",
+      "t5_weapon_ithaca_world:mc/mtl_clan_tag"
+    ],
+    [
+      "p_zom_monitor_csm_screen_off:mc/global_black"
+    ]
+  ],
+  "pipeline": ".tools/compose_scene_t5.py (same composer as Kino)",
+  "arrivalState": {
+    "landerEntity": 1247,
+    "stationEntity": 1352,
+    "offset": [
+      1.0,
+      -1232.0,
+      -1.5
+    ],
+    "linkedParts": 19,
+    "source": "export_ascension/zombie_cosmodrome_patch/maps/zombie_cosmodrome_lander.gsc::new_lander_intro / open_lander_gate"
+  }
+}

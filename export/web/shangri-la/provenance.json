@@ -1,0 +1,64 @@
+{
+  "map": "zombie_temple",
+  "stage": "map-only",
+  "sources": [
+    {
+      "path": "zone/Common/zombie_temple.ff",
+      "bytes": 56924128,
+      "sha256": "fa7fdcd37fde992ce8506e7c7c35b3184792edddb7aef83952fa48625c5ee4b4"
+    },
+    {
+      "path": "zone/English/en_zombie_temple.ff",
+      "bytes": 395520,
+      "sha256": "d2f1141d4f5a259fd0ea8241509c22c2f1de3553db6e53a7a45b93102feaa93e"
+    },
+    {
+      "path": "zone/Common/zombie_temple_patch.ff",
+      "bytes": 315136,
+      "sha256": "f21c08d870230adfdfd1cd39dab87e8bbdebe645cbcafdb7d7bb87da52021fa4"
+    }
+  ],
+  "entities": 2389,
+  "staticPlacements": 5199,
+  "scriptModels": 209,
+  "missingModels": [],
+  "textures": 357,
+  "untexturedMaterials": [
+    [
+      "wc/global_black"
+    ],
+    [
+      "wc/shadowcaster"
+    ],
+    [
+      "wc/zombie_water_dynamic"
+    ],
+    [
+      "wc/uwb_moon_pools_water_dynamic"
+    ],
+    [
+      "wc/ztem_moon_pools_water_dynamic"
+    ],
+    [
+      "t5_weapon_beretta682_world:mc/mtl_player_icon",
+      "t5_weapon_m16a1_world:mc/mtl_player_icon",
+      "t5_weapon_ithaca_world:mc/mtl_player_icon",
+      "t5_weapon_mp5_world:mc/mtl_player_icon",
+      "t5_weapon_mpl_world:mc/mtl_player_icon",
+      "t5_weapon_ak74u_world:mc/mtl_player_icon",
+      "t5_weapon_m14_world:mc/mtl_player_icon",
+      "t5_weapon_pm63_world:mc/mtl_player_icon"
+    ],
+    [
+      "t5_weapon_beretta682_world:mc/mtl_clan_tag",
+      "t5_weapon_m16a1_world:mc/mtl_clan_tag",
+      "t5_weapon_ithaca_world:mc/mtl_clan_tag",
+      "t5_weapon_mp5_world:mc/mtl_clan_tag",
+      "t5_weapon_mpl_world:mc/mtl_clan_tag",
+      "t5_weapon_ak74u_world:mc/mtl_clan_tag",
+      "t5_weapon_m14_world:mc/mtl_clan_tag",
+      "t5_weapon_pm63_world:mc/mtl_clan_tag"
+    ]
+  ],
+  "pipeline": ".tools/compose_scene_t5.py (same composer as Kino)"
+}

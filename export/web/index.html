@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kino der Toten — Zombies</title>
+<meta name="description" content="The lights are out. The show goes on. Play Kino der Toten solo zombie survival in your browser.">
+<link rel="canonical" href="https://kino-der-toten.pages.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kino der Toten">
+<meta property="og:title" content="Kino der Toten — Zombies">
+<meta property="og:description" content="The lights are out. The show goes on. Play Kino der Toten solo zombie survival in your browser.">
+<meta property="og:url" content="https://kino-der-toten.pages.dev/">
+<meta property="og:image" content="https://kino-der-toten.pages.dev/social/kino-preview-v1.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1737">
+<meta property="og:image:height" content="906">
+<meta property="og:image:alt" content="Kino der Toten: Solo Survival. Zombies emerge from the shadows of a ruined theater with red curtains and twin staircases.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kino der Toten — Zombies">
+<meta name="twitter:description" content="The lights are out. The show goes on. Play Kino der Toten solo zombie survival in your browser.">
+<meta name="twitter:image" content="https://kino-der-toten.pages.dev/social/kino-preview-v1.png">
+<meta name="twitter:image:alt" content="Kino der Toten: Solo Survival. Zombies emerge from the shadows of a ruined theater with red curtains and twin staircases.">
+<link rel="stylesheet" href="style.css"><link rel="icon" href="data:,"><link rel="stylesheet" href="touch-controls.css"></head><body class="menu-open">
+<div id="vignette"></div><div id="hurt"></div><div id="flash"></div>
+<div id="top"><span class="red-dot"></span> SOLO <span class="divider">/</span> KINO DER TOTEN <span id="location">Lobby</span></div>
+<div id="crosshair">＋</div><div id="hitmarker">×</div>
+<div id="announcement"><span id="announcement-small"></span><strong id="announcement-title"></strong></div><div id="prompt"></div><div id="toast"></div>
+<div id="round-panel"><span class="eyebrow">ROUND</span><strong id="round">I</strong><span id="remaining"></span></div>
+<div id="player-panel"><div id="perks"></div><div class="points"><span>✦</span> <strong id="points">500</strong></div><div class="health-track"><i id="health-fill"></i></div><span id="health-label">100 / 100</span></div>
+<div id="weapon-panel"><div id="weapon-name">M1911</div><div id="ammo"><strong id="mag">8</strong><span>/</span><span id="reserve">32</span></div><div id="reload-label"></div><div id="grenades">G · 4 GRENADES</div></div>
+<div id="effects"></div><div id="objective"></div><div id="controls-hint">WASD move · Shift sprint · R reload · F use · V knife · Esc pause</div><div id="debug" hidden></div>
+<section id="menu"><div class="menu-grain"></div><div class="menu-content"><div class="kicker">CALL OF DUTY <span>BLACK OPS</span></div><p class="chapter">ZOMBIES / SOLO SURVIVAL</p><h1>KINO<br>DER TOTEN<span>.</span></h1><p class="tagline">The lights are out. The show goes on.</p><div id="loading"><span id="load-label">Recovering the theater…</span><div><i id="load-progress"></i></div></div><button id="start" disabled>ENTER THE THEATER <span>→</span></button><button id="restart" class="secondary" hidden>NEW GAME</button><p id="menu-status">Loading map and equipment</p><div id="results" hidden></div><div class="menu-controls"><span><kbd>W A S D</kbd> MOVE</span><span><kbd>MOUSE</kbd> AIM / SHOOT</span><span><kbd>F</kbd> INTERACT</span><span><kbd>SPACE</kbd> JUMP</span><span><kbd>1 / 2</kbd> WEAPON</span><span><kbd>V</kbd> KNIFE</span><span><kbd>4 / X</kbd> CLAYMORE / MONKEY</span><span><kbd>5</kbd> ATTACHMENT</span></div><p class="local-note">32 WEAPONS · SOLO SURVIVAL</p></div><div class="menu-side"><span>BERLIN, GERMANY</span><strong>115</strong><span>NO ONE LEAVES THE THEATER.</span></div></section>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/jsm/","three-mesh-bvh":"./vendor/bvh.js","@recast-navigation/core":"./vendor/recast-core.mjs","@recast-navigation/wasm":"./vendor/recast-wasm.js"}}</script><script type="module" src="game.js"></script></body></html>

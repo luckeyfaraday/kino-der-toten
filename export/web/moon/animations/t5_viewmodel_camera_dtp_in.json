@@ -1,0 +1,1 @@
+{"name":"t5_viewmodel_camera_dtp_in","fps":30,"loop":false,"duration":0.1667,"notifies":[],"bones":[{"name":"tag_camera","rot":{"frames":[0,1,2,4,5],"values":[0,0,0,1,0,0.00491,0,1,0,0.01737,0,0.99985,0,0.05197,0,0.99866,0,0.0676,0,0.99771]},"pos":{"frames":[0,1,2,5],"values":[0,0,0,0,0,0.0653,0,0,0.2303,0,0,0.9788]}}]}

@@ -1,0 +1,12 @@
+{
+  "entities": 2794,
+  "weapons": 32,
+  "models": 35,
+  "animations": 676,
+  "convertedTextures": 172,
+  "missingTextures": [
+    "clan_font_c",
+    "emblem_clear"
+  ],
+  "sourceEntitySha256": "8e0640d3a97ace684ceb5b89add8744615028a7b75bfc48e5a27371a1735fff0"
+}

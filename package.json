@@ -1,0 +1,51 @@
+{
+  "name": "kino-browser-zombies",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cloudflare:stage": "npm run build:mobile && node .tools/stage-cloudflare.mjs",
+    "build:mobile": "py -3.11 .tools/build-mobile-textures.py",
+    "cloudflare:deploy": "npm run cloudflare:stage && npx --yes wrangler@4.131.1 pages deploy --branch main",
+    "test:pages": "node .tools/test-pages.mjs",
+    "test:mobile:memory": "node .tools/test-mobile-memory.mjs",
+    "test:mobile:webkit": "node .tools/test-mobile-memory.mjs --webkit",
+    "start": "node .tools/serve.mjs 5173",
+    "start:mobile": "node .tools/serve.mjs 5184 --lan",
+    "build:assets": "py -3.11 .tools/build_game_assets.py",
+    "build:world": "py -3.11 .tools/compose_scene_t5.py",
+    "build:audio": "py -3.11 .tools/extract_audio.py",
+    "bake": "node .tools/bake-world.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node .tools/test-game.mjs",
+    "test:mobile": "node .tools/test-mobile.mjs",
+    "test:gameplay": "node .tools/qa.mjs",
+    "test:extras": "node .tools/test-extras.mjs",
+    "test:weapons": "node .tools/test-weapons.mjs",
+    "test:presentation": "node .tools/test-presentation.mjs",
+    "test:melee": "node .tools/test-melee.mjs",
+    "test:routes": "node .tools/test-routes.mjs",
+    "test:zombies": "node .tools/test-zombies.mjs",
+    "build:moon": "powershell -NoProfile -ExecutionPolicy Bypass -File .tools/rebuild-moon.ps1",
+    "test:moon": "node .tools/test-moon.mjs",
+    "test:moon:combat": "node .tools/test-moon-combat.mjs",
+    "test:moon:completion": "node .tools/test-moon-completion.mjs",
+    "test:moon:quest": "node .tools/test-moon-quest.mjs",
+    "test:completion": "node .tools/test-kino-completion.mjs",
+    "build:shangri-la": "powershell -NoProfile -ExecutionPolicy Bypass -File .tools/rebuild-shangri-la.ps1",
+    "test:shangri-la": "node .tools/test-shangri-la.mjs",
+    "build:coast": "powershell -NoProfile -ExecutionPolicy Bypass -File .tools/rebuild-coast.ps1",
+    "test:coast": "node .tools/test-coast.mjs",
+    "build:ascension": "powershell -NoProfile -ExecutionPolicy Bypass -File .tools/rebuild-ascension.ps1",
+    "test:ascension": "node .tools/test-ascension.mjs"
+  },
+  "dependencies": {
+    "three": "0.185.1",
+    "three-mesh-bvh": "0.9.14",
+    "@recast-navigation/core": "0.43.1",
+    "@recast-navigation/generators": "0.43.1"
+  },
+  "devDependencies": {
+    "playwright-core": "1.62.1"
+  }
+}

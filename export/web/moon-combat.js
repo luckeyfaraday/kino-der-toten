@@ -1,0 +1,171 @@
+import * as THREE from 'three';
+import { ViewWeapon } from './animation.js';
+import { MoonAudio } from './moon-audio.js';
+import { Powerups } from './powerups.js';
+import { MoonSession } from './moon-session.js';
+import { MoonEnemies } from './moon-enemies.js';
+import { PerkDrink } from './perk-drink.js';
+import { loadModel } from './animation.js';
+import { clone } from 'three/addons/utils/SkeletonUtils.js';
+
+const pickupNames={full_ammo:'Max Ammo',double_points:'Double Points',insta_kill:'Insta-Kill',nuke:'Nuke',carpenter:'Carpenter',fire_sale:'Fire Sale'};
+
+export class MoonCombat {
+  constructor(scene,camera,world,{notice,end,feet}) {
+    Object.assign(this,{scene,camera,world,notice,end,feet});this.enabled=true;this.primary=false;this.pressed=false;this.ads=false;
+    this.audio=new MoonAudio();
+    // Common combat cues are reusable; Kino's looping theater ambience is not.
+    this.audio.music={stop(){}};
+    this.viewScene=new THREE.Scene();this.viewCamera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.01,200);
+    this.viewScene.add(new THREE.AmbientLight(0xdce4ef,2.6));const light=new THREE.DirectionalLight(0xffefdb,2);light.position.set(0,4,2);this.viewScene.add(light);
+    this.muzzle=new THREE.PointLight(0xffc276,0,200,1);scene.add(this.muzzle);
+    this.particles=[];this.grenades=[];this.pendingMelee=null;this.lastReload=0;this.burst=0;this.hitUntil=0;this.lastShot=null;this.lastRound=0;
+  }
+  async load(){
+    const response=await fetch('moon/combat-data.json');if(!response.ok)throw new Error('Missing Moon combat assets; rebuild Moon.');
+    this.data=await response.json();this.session=new MoonSession(this.data);
+    this.view=new ViewWeapon(this.viewScene,this.data,(name,def)=>this.audio.notify(name,def));
+    this.enemies=new MoonEnemies(this.scene,this.world,this.data,this.session,{damage:n=>this.damage(n),kill:z=>this.onKill(z),hit:(z,head)=>this.hit(z,head),sound:(kind,p)=>this.audio.play(kind,Math.max(0,1-p.distanceTo(this.camera.position)/1000))});
+    this.pickups=new Powerups(this.scene,this.data,this.audio,type=>this.collect(type));
+    this.perkDrink=new PerkDrink(this.viewScene,this.data,this.audio);this.equipmentModels={};
+    await Promise.all([this.audio.load(),this.enemies.load(),this.pickups.load(),this.equip(),this.perkDrink.load(),
+      ...Object.entries(this.data.equipment).map(async([id,d])=>this.equipmentModels[id]=await loadModel(d.worldModel))]);
+  }
+  async equip(){
+    const suit=!!this.features?.state.suit;
+    if(suit!==this.handSuit){this.view.currentId=null;this.handSuit=suit;}
+    const def={...this.session.def};if(suit)def.handsModel=this.data.props.viewmodel_zom_pressure_suit_arms;
+    await this.view.equip(def);if(this.view.ready)this.audio.warmWeapon(this.session.def);
+  }
+  clearInput(){this.primary=false;this.pressed=false;this.secondary=false;this.secondaryPressed=false;this.ads=false;this.burst=0;}
+  pause(){this.clearInput();this.audio.pause();}
+  resume(){if(this.enabled){this.audio.start();this.audio.warmWeapon(this.session.def);}}
+  enterArea(lunar){this.enemies.reset();this.pickups.reset();this.clearTransient();this.session.enterArea(lunar);this.session.spawned=this.session.killed;this.world.navigation.area=lunar?'moon':'earth';this.lastRound=0;}
+  clearTransient(){
+    this.perkDrink?.stop();
+    this.pendingMelee=null;this.session.meleeLeft=0;this.clearInput();
+    for(const list of [this.particles,this.grenades]){for(const p of [...list])this.removeEffect(list,p);}
+  }
+  async reset(){this.clearTransient();this.audio.reset();this.session.reset();this.enemies.reset();this.pickups.reset();this.view.currentId=null;this.lastRound=0;this.lastReload=0;await this.equip();}
+  damage(n){
+    if(this.session.area==='earth'&&this.session.effects.pack_shield>this.session.time&&this.camera.position.distanceTo(new THREE.Vector3(...this.features.one('zombie_vending_upgrade').position))<220)return;
+    if(!this.enabled||!this.session.damage(n))return;
+    this.audio.play('hit');
+    if(this.session.phase==='gameover'){this.pendingMelee=null;this.clearInput();this.end();}
+  }
+  key(code){
+    if(!this.enabled)return;
+    if(code==='KeyR')this.reload();if(code==='KeyV')this.melee();if(code==='KeyG')this.grenade();if(code==='KeyX')this.throwEquipment();
+    if(code==='KeyB'&&this.session.toggleWave()){this.view.currentId=null;this.equip().catch(console.error);}
+    if(['Digit1','Digit2','Digit3'].includes(code))this.switchWeapon(Number(code.at(-1))-1);
+    if(code==='KeyM'){this.audio.enabled=!this.audio.enabled;this.notice(this.audio.enabled?'Sound on':'Sound off');}
+  }
+  switchWeapon(slot){
+    if(!this.enabled)return;
+    const previous=this.session.slot;this.session.switchWeapon(slot);
+    if(previous===this.session.slot)return;
+    this.pendingMelee=null;this.burst=0;this.equip().catch(console.error);
+  }
+  reload(){if(!this.view.ready)return;const empty=this.session.weapon.mag===0;if(this.session.reload()){this.burst=0;this.ads=false;this.lastReload=this.session.reloadSerial;this.view.reload(empty,this.session.reloadDuration,this.session.reloadStage);}}
+  shot(hand='right'){
+    const s=this.session;
+    if(!this.view.ready||['raise','melee','sprintIn','sprint','sprintOut'].includes(this.view.mode))return false;
+    if(s.reloadLeft&&s.def.segmentedReload&&s.weapon.mag){s.interruptReload();return false;}
+    if(!s.fire()){if(s.weapon.mag===0&&this.pressed)this.audio.weapon('empty',s.def);return false;}
+    this.view.shoot({ads:this.ads,empty:s.weapon.mag===0,hand});this.audio.weapon('shot',s.def);this.muzzle.position.copy(this.camera.position);this.muzzle.intensity=160;
+    const forward=this.camera.getWorldDirection(new THREE.Vector3());
+    this.features?.shot(new THREE.Ray(this.camera.position.clone(),forward),s.def.id.startsWith('microwavegun')?'wave':'bullet');
+    if(s.def.id==='microwavegun_zm'){
+      for(const z of [...this.enemies.list]){const delta=z.root.position.clone().add(new THREE.Vector3(0,35,0)).sub(this.camera.position),d=delta.length();
+        if(d<(s.weapon.upgraded?1400:1000)&&delta.normalize().dot(forward)>.78&&this.world.lineClear(this.camera.position,this.enemies.headPosition(z)))this.enemies.hurt(z,z.health,false,false,'wave');}
+      this.effect(this.camera.position.clone().addScaledVector(forward,110),0xccecff,20);return true;
+    }
+    if(s.def.explosionRadius>0){
+      const mesh=new THREE.Mesh(new THREE.SphereGeometry(3,8,6),new THREE.MeshBasicMaterial({color:s.def.id==='ray_gun_zm'?0x65ff73:0xffe699}));mesh.position.copy(this.camera.position);this.scene.add(mesh);
+      this.grenades.push({mesh,velocity:forward.multiplyScalar(s.def.projectileSpeed||1600),life:4,rocket:true,radius:s.def.explosionRadius,damage:s.def.explosionInnerDamage||s.def.damage});return true;
+    }
+    for(let i=0;i<Math.max(1,s.def.pellets);i++){
+      const direction=forward.clone(),spread=(s.def.pellets>1?.055:this.ads?0:.012)*(s.perks.has('specialty_deadshot')?.65:1);
+      direction.add(new THREE.Vector3((Math.random()-.5)*spread,(Math.random()-.5)*spread,(Math.random()-.5)*spread)).normalize();
+      const ray=new THREE.Ray(this.camera.position.clone(),direction),wall=this.world.raycast(ray,1,6000),hit=this.enemies.rayHit(ray,wall?.distance??6000);
+      this.lastShot={target:hit?.z.id,head:hit?.head,wall:wall?.distance};
+      if(hit)this.enemies.hurt(hit.z,s.def.id==='microwavegundw_zm'?hit.z.health:(hit.distance>s.def.range?s.def.minDamage:s.def.damage)*(hit.head?Math.max(1,s.def.headMultiplier):1),hit.head,false,s.def.id==='microwavegundw_zm'?'zap':'bullet');
+      else if(wall)this.effect(wall.position,0xbbb4a7,3);
+    }
+    this.camera.rotation.x=Math.min(1.48,this.camera.rotation.x+(this.ads?.006:.012));return true;
+  }
+  meleeTarget(){
+    const forward=this.camera.getWorldDirection(new THREE.Vector3());let best=null;
+    for(const z of this.enemies.list){const delta=z.root.position.clone().add(new THREE.Vector3(0,44,0)).sub(this.camera.position);if(delta.length()<94&&delta.clone().normalize().dot(forward)>.4&&this.world.lineClear(this.camera.position,z.root.position.clone().add(new THREE.Vector3(0,44,0))))if(!best||delta.length()<best.distance)best={z,distance:delta.length()};}
+    return best?.z;
+  }
+  melee(){
+    const s=this.session;if(!this.view.ready||!s.canAct)return false;
+    const strike=this.view.melee(s.bowie?'bowie':'knife',!!this.meleeTarget());if(!strike)return false;
+    s.cancelReload();s.meleeLeft=strike.duration;this.burst=0;this.ads=false;this.pressed=false;
+    this.pendingMelee={at:s.time+strike.delay,damage:strike.damage};this.audio.knife('swing',false);return true;
+  }
+  grenade(){
+    if(!this.session.grenades||!this.session.canAct)return;
+    this.session.grenades--;
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(3.5,8,6),new THREE.MeshStandardMaterial({color:0x43563b,roughness:.8}));mesh.position.copy(this.camera.position);this.scene.add(mesh);
+    this.grenades.push({mesh,velocity:this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(480).add(new THREE.Vector3(0,140,0)),life:3});
+  }
+  throwEquipment(){
+    const s=this.session;if(!s.canAct||!s.equipment||s.equipmentAmmo<=0)return false;
+    s.equipmentAmmo--;const mesh=clone(this.equipmentModels[s.equipment]);mesh.position.copy(this.camera.position);this.scene.add(mesh);
+    this.grenades.push({mesh,velocity:this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(440).add(new THREE.Vector3(0,110,0)),life:2,equipment:s.equipment,shared:true});return true;
+  }
+  effect(position,color=0x9e3023,count=7){
+    for(let i=0;i<count;i++){const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.5,1.5),new THREE.MeshBasicMaterial({color}));mesh.position.copy(position);this.scene.add(mesh);this.particles.push({mesh,life:.5,velocity:new THREE.Vector3((Math.random()-.5)*90,Math.random()*80,(Math.random()-.5)*90)});}
+  }
+  hit(z,head){this.hitUntil=this.session.time+.12;this.effect(head?this.enemies.headPosition(z):z.root.position.clone().add(new THREE.Vector3(0,40,0)));}
+  onKill(z){
+    this.features?.onKill(z);
+    if(!z||this.nuking||this.session.area==='earth'||z.kind==='astronaut'||['wave','gersh'].includes(z.deathCause))return;
+    const type=this.session.drops.tryDrop(this.session,{kind:z.kind,playable:true,destroyedWindows:this.features?.brokenWindows??0,boxMoves:this.features?.box?.moves??0});
+    if(type&&this.data.powerups[type])this.pickups.spawn(type,z.root.position);
+  }
+  collect(type){
+    this.session.powerup(type);this.audio.play(type);this.notice(pickupNames[type]);
+    if(type==='nuke'){this.nuking=true;this.enemies.nuke(z=>this.effect(z.root.position,0xe3e7b9));this.nuking=false;}
+    if(type==='carpenter')this.features?.repairAll();
+  }
+  buyWeapon(id){
+    if(!this.session.buyWeapon(id)){this.notice(this.session.inventory.some(w=>w.id===id)?'Not enough points or ammunition already full.':'Not enough points.');return false;}
+    this.equip().catch(console.error);this.audio.play('buy');this.notice(this.data.weapons[id].name);return true;
+  }
+  update(dt,{moving,sprint}){
+    if(!this.enabled||this.session.phase==='gameover')return;
+    const s=this.session;s.update(dt);
+    if(this.view.currentId!==s.def.id+(s.def.upgraded?':upgraded':'')||this.handSuit!==!!this.features?.state.suit)this.equip().catch(console.error);
+    this.perkDrink.update(dt,s);this.view.pivot.visible=!s.pack&&!s.drinking&&s.phase!=='reviving';
+    if(s.reloadLeft>0&&s.reloadSerial!==this.lastReload){this.lastReload=s.reloadSerial;this.view.reload(false,s.reloadDuration,s.reloadStage);}
+    if(this.pendingMelee&&s.time>=this.pendingMelee.at){const strike=this.pendingMelee;this.pendingMelee=null;this.features?.shot(new THREE.Ray(this.camera.position.clone(),this.camera.getWorldDirection(new THREE.Vector3())),'melee',94);const z=this.meleeTarget();if(z){this.enemies.hurt(z,strike.damage,false,true,'melee');this.audio.knife('hit',false);}}
+    this.view.update(dt,{moving,sprint,ads:this.ads,reloading:s.reloadLeft>0,empty:s.weapon.mag===0,time:s.time});
+    if(!sprint&&(this.pressed||this.primary&&s.def.automatic||this.burst>0)){if(this.shot()){if(this.burst>0)this.burst--;else if(s.def.fireType==='3-Round Burst')this.burst=2;}}
+    this.pressed=false;
+    if(!sprint&&s.def.dualWield&&(this.secondaryPressed||this.secondary&&s.def.automatic))this.shot('left');
+    this.secondaryPressed=false;
+    this.enemies.update(dt,this.feet());
+    if(s.area==='moon'&&s.phase==='fighting'&&s.round!==this.lastRound){this.lastRound=s.round;this.notice('Round '+s.round,4);this.audio.play('round');}
+    this.pickups.update(dt,this.feet(),!['gameover','reviving'].includes(s.phase)&&!this.features?.hack,(a,b)=>this.world.lineClear(a,b));
+    for(const g of [...this.grenades]){
+      g.life-=dt;if(!g.rocket)g.velocity.y-=(this.world.lowGravity(g.mesh.position)?136:650)*dt;
+      const travel=g.velocity.clone().multiplyScalar(dt),hit=this.world.raycast(new THREE.Ray(g.mesh.position.clone(),travel.clone().normalize()),0,travel.length()+4);
+      if(hit){const normal=hit.triangle.getNormal(new THREE.Vector3());if(normal.dot(g.velocity)>0)normal.negate();g.velocity.reflect(normal).multiplyScalar(.45);g.mesh.position.copy(hit.position).addScaledVector(normal,4);if(g.rocket)g.life=0;}else g.mesh.position.add(travel);
+      if(g.life<=0){
+        if(g.equipment){this.features?.equipment(g.equipment,g.mesh.position.clone());this.removeEffect(this.grenades,g);continue;}
+        this.audio.play('explosion');this.effect(g.mesh.position,0xffb347,25);this.features?.blast(g.mesh.position,g.rocket?'explosion':'grenade');
+        const radius=g.radius||300,damage=g.damage||1500;
+        for(const z of [...this.enemies.list]){const d=z.root.position.distanceTo(g.mesh.position);if(d<radius&&this.world.lineClear(g.mesh.position,z.root.position.clone().add(new THREE.Vector3(0,30,0))))this.enemies.hurt(z,Math.max(75,damage*(1-d/radius)),false,false,g.rocket?'explosion':'grenade');}
+        const d=this.camera.position.distanceTo(g.mesh.position);if(d<160&&!s.perks.has('specialty_flakjacket'))this.damage(180*(1-d/160));this.removeEffect(this.grenades,g);
+      }
+    }
+    for(const p of [...this.particles]){p.life-=dt;p.velocity.y-=200*dt;p.mesh.position.addScaledVector(p.velocity,dt);if(p.life<=0)this.removeEffect(this.particles,p);}
+    this.muzzle.intensity=Math.max(0,this.muzzle.intensity-dt*2200);
+    this.camera.fov=THREE.MathUtils.damp(this.camera.fov,this.ads&&!s.reloadLeft&&!s.meleeLeft?s.def.adsFov||56:78,12,dt);this.camera.updateProjectionMatrix();
+  }
+  removeEffect(list,item){item.mesh.removeFromParent();if(!item.shared){item.mesh.geometry.dispose();item.mesh.material.dispose();}list.splice(list.indexOf(item),1);}
+  snapshot(){return {...this.session.snapshot(),area:this.session.area,earthTime:this.session.earthTime,enemies:this.enemies.snapshot(),view:this.view.snapshot(),spawnFailures:this.enemies.spawnFailures};}
+}

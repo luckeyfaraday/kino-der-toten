@@ -1,0 +1,24 @@
+{
+  "map": "zombie_moon",
+  "sources": [
+    {
+      "path": "zone/Common/zombie_moon.ff",
+      "bytes": 51560800,
+      "sha256": "05917f5e2ffcf2dcf2f9fc420df7c12c736cb9e2bb8413480e095e2df0815a3f"
+    },
+    {
+      "path": "zone/Common/zombie_moon_patch.ff",
+      "bytes": 89248,
+      "sha256": "d85d734136005363014e0e2ba76299cb00222728561d23c37788c159a3ec3560"
+    },
+    {
+      "path": "zone/English/en_zombie_moon.ff",
+      "bytes": 111136,
+      "sha256": "f1eafd7c4db54b9d920b3f0319eabb76bc58b0dab8c08cdfc8bce109de2b6c31"
+    }
+  ],
+  "entities": 3727,
+  "staticPlacements": 5939,
+  "doorGroups": 13,
+  "stage": "solo-quest"
+}

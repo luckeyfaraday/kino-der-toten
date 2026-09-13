@@ -1,0 +1,20 @@
+import {chromium} from 'playwright-core';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({executablePath:['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync),headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:900}}),checks=[],errors=[];
+page.on('pageerror',e=>errors.push(String(e)));
+const state=()=>page.evaluate(()=>kino.debug.getState());
+const fresh=()=>page.evaluate(()=>{kino.debug.reset();kino.debug.setActive(true);kino.debug.setInvulnerable(true);kino.debug.teleportPlayer([0,100,1120]);kino.debug.step(.6);});
+function pass(name,detail){checks.push({name,passed:true,detail});console.log('PASS',name,detail??'');}
+try{
+ await page.goto('http://127.0.0.1:5173/');await page.waitForFunction(()=>kino?.debug.getState().ready,null,{timeout:120000});await page.click('#start');
+ await fresh();await page.evaluate(()=>{kino.debug.setInvulnerable(false);const p=kino.debug.getState().player.feet;kino.debug.spawnEnemy([p[0],p[1],p[2]-58]);kino.debug.step(1.3);});let s=await state();assert(s.health<100);pass('Pursuing zombie applies timed melee damage',s.health);
+ await fresh();await page.evaluate(()=>{const p=kino.debug.getState().player.feet;kino.debug.spawnEnemy([p[0],p[1],p[2]-100]);kino.debug.lookAt([p[0],p[1]+60,p[2]-200]);});await page.keyboard.down('KeyW');await page.evaluate(()=>kino.debug.step(1.4));await page.keyboard.up('KeyW');s=await state();const separation=Math.hypot(s.player.feet[0]-s.enemies[0].position[0],s.player.feet[2]-s.enemies[0].position[2]);assert(separation>=28);pass('Player capsule cannot run through a zombie',separation);
+ await fresh();await page.evaluate(()=>kino.debug.step(21));s=await state();const b=s.barriers.find(b=>b.count===0);assert(b);await page.evaluate(p=>{kino.debug.teleportPlayer(p);kino.debug.step(.4);},b.position);const before=(await state()).barriers.find(x=>x.id===b.id).count;await page.keyboard.down('KeyF');await page.evaluate(()=>kino.debug.step(2.3));await page.keyboard.up('KeyF');s=await state();assert(s.barriers.find(x=>x.id===b.id).count>before);pass('Holding F rebuilds a torn barricade and awards points',s.points);
+ await fresh();await page.evaluate(()=>{kino.debug.step(20);kino.debug.collectPowerup('nuke');kino.debug.step(.1);});s=await state();assert.equal(s.round,2);assert.equal(s.total,8);assert.equal(s.phase,'preparing');pass('Clearing the full first wave advances to round two');
+ await fresh();await page.evaluate(()=>{const p=kino.debug.getState().player.feet;kino.debug.spawnEnemy([p[0]+45,p[1],p[2]-40]);kino.debug.lookAt([p[0],p[1],p[2]-20]);});await page.keyboard.press('KeyG');await page.evaluate(()=>kino.debug.step(3.2));s=await state();assert.equal(s.grenades,3);assert(s.kills>=1);pass('Thrown grenade explodes and kills a nearby zombie');
+ await fresh();await page.evaluate(()=>{kino.debug.grantPoints(3000);const e=kino.debug.getEntities().find(e=>e.targetname==='bowie_upgrade');kino.debug.teleportPlayer(e.position);kino.debug.step(.45);});await page.keyboard.press('KeyF');s=await state();assert.equal(s.points,500);await page.evaluate(()=>{kino.debug.teleportPlayer([0,100,1120]);kino.debug.step(.6);kino.debug.setRound(5);const p=kino.debug.getState().player.feet;const id=kino.debug.spawnEnemy([p[0],p[1],p[2]-60],'zombie');kino.debug.aimAtEnemy(id,false);});await page.keyboard.press('KeyV');await page.evaluate(()=>kino.debug.step(.2));s=await state();assert(s.kills>=1);pass('Bowie wall purchase upgrades melee damage');
+ await page.screenshot({path:'artifacts/qa/extra-gameplay.png'});assert.equal(errors.length,0);
+}catch(e){checks.push({name:'Failure',passed:false,error:String(e),stack:e.stack,state:await state()});console.error(e);process.exitCode=1;await page.screenshot({path:'artifacts/qa/extra-failure.png'});}
+finally{fs.writeFileSync('artifacts/qa/extras-report.json',JSON.stringify({checks,errors},null,2));await browser.close();}
