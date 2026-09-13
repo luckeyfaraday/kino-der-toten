@@ -1,0 +1,26 @@
+{
+  "map": "zombie_cosmodrome",
+  "name": "ascension",
+  "output": "export/web/ascension",
+  "world": "export_ascension/world/maps/zombie_cosmodrome.d3dbsp.gfxworld",
+  "entities": "export_ascension/world/maps/zombie_cosmodrome.d3dbsp.ents",
+  "objDirs": [
+    "export_ascension/zombie_cosmodrome_patch/model_export",
+    "export_ascension/en_zombie_cosmodrome/model_export",
+    "export_ascension/zombie_cosmodrome/model_export",
+    "export_ascension/common_zombie/model_export",
+    "export_ascension/common/model_export",
+    "export/model_export",
+    "export_localized_obj/model_export"
+  ],
+  "assetDirs": [
+    "export_game/common",
+    "export_game/common_zombie",
+    "export_game/en_common_zombie",
+    "export_ascension/zombie_cosmodrome",
+    "export_ascension/en_zombie_cosmodrome",
+    "export_ascension/zombie_cosmodrome_patch"
+  ],
+  "includeScriptModels": true,
+  "skipDistant": false
+}

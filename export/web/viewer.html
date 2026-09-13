@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kino der Toten — world shell</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0c; color: #e8e6e3; font: 13px/1.5 ui-monospace, "Cascadia Code", Menlo, monospace; overflow: hidden; }
+  canvas { display: block; }
+
+  #hud {
+    position: fixed; top: 12px; left: 12px; z-index: 10;
+    background: rgba(12,12,16,.82); border: 1px solid #2a2a33; border-radius: 6px;
+    padding: 10px 12px; min-width: 220px; backdrop-filter: blur(6px);
+  }
+  #hud h1 { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: #d9c07a; margin-bottom: 6px; }
+  #hud dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; }
+  #hud dt { color: #7d7d8a; }
+  #hud dd { text-align: right; font-variant-numeric: tabular-nums; }
+
+  #help {
+    position: fixed; bottom: 12px; left: 12px; z-index: 10; color: #7d7d8a;
+    background: rgba(12,12,16,.82); border: 1px solid #2a2a33; border-radius: 6px; padding: 8px 12px;
+  }
+  #help b { color: #b9b6b1; font-weight: 600; }
+
+  #splash {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-content: center; gap: 14px;
+    text-align: center; background: rgba(6,6,9,.9); cursor: pointer;
+  }
+  #splash h2 { font-size: 22px; letter-spacing: .08em; color: #d9c07a; font-weight: 600; }
+  #splash p { color: #8d8a95; }
+  #splash.hidden { display: none; }
+  #err { color: #e0645a; max-width: 60ch; white-space: pre-wrap; text-align: left; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>KINO DER TOTEN</h1>
+  <dl>
+    <dt>status</dt><dd id="s-status">loading…</dd>
+    <dt>draw calls</dt><dd id="s-calls">—</dd>
+    <dt>triangles</dt><dd id="s-tris">—</dd>
+    <dt>fps</dt><dd id="s-fps">—</dd>
+    <dt>position</dt><dd id="s-pos">—</dd>
+  </dl>
+</div>
+
+<div id="help">
+  <b>WASD</b> move · <b>Shift</b> sprint · <b>Space/Ctrl</b> up/down · <b>Esc</b> release cursor
+</div>
+
+<div id="splash">
+  <h2>KINO DER TOTEN</h2>
+  <p id="splash-msg">loading world shell…</p>
+  <div id="err"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { censorFlags } from './flag-censorship.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+const $ = id => document.getElementById(id);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+// Kino is a dark interior and the export carries no lightmaps yet, so the
+// unlit albedo reads almost black without exposure applied on top.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2.4;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0c);
+// The export carries no lightmaps yet, so the scene is lit generically:
+// a hemisphere fill to keep interiors readable plus one key light for relief.
+scene.add(new THREE.AmbientLight(0xa8b4c4, 1.4));
+scene.add(new THREE.HemisphereLight(0xb9c7d4, 0x3a332c, 2.6));
+const key = new THREE.DirectionalLight(0xfff0d0, 1.8);
+key.position.set(0.5, 1, 0.3);
+scene.add(key);
+// Fill from behind so surfaces facing away from the key are not solid black.
+const fill = new THREE.DirectionalLight(0x8fa3c0, 0.9);
+fill.position.set(-0.6, 0.4, -0.5);
+scene.add(fill);
+
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 1, 40000);
+// player_respawn_point from zombie_theater.d3dbsp.ents, game-space
+// (-1578, -216, 10), mapped to the y-up basis and raised to eye height.
+camera.position.set(-1578, 70, 216);
+
+// ?cam=x,y,z&look=x,y,z places the camera for screenshots and debugging.
+const qs = new URLSearchParams(location.search);
+const triple = key => {
+  const raw = qs.get(key);
+  if (!raw) return null;
+  const n = raw.split(',').map(Number);
+  return n.length === 3 && n.every(Number.isFinite) ? n : null;
+};
+const camAt = triple('cam');
+if (camAt) camera.position.set(...camAt);
+const lookAt = triple('look');
+if (lookAt) camera.lookAt(...lookAt);
+
+const controls = new PointerLockControls(camera, renderer.domElement);
+scene.add(controls.object);
+
+const splash = $('splash');
+splash.addEventListener('click', () => { if (!splash.classList.contains('busy')) controls.lock(); });
+controls.addEventListener('lock', () => splash.classList.add('hidden'));
+controls.addEventListener('unlock', () => splash.classList.remove('hidden'));
+
+const keys = new Set();
+addEventListener('keydown', e => keys.add(e.code));
+addEventListener('keyup', e => keys.delete(e.code));
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+new GLTFLoader().load('kino.gltf',
+  gltf => {
+    censorFlags(gltf.scene);
+    scene.add(gltf.scene);
+
+    let tris = 0;
+    gltf.scene.traverse(o => {
+      if (!o.isMesh) return;
+      o.frustumCulled = true;
+      const idx = o.geometry.getIndex();
+      tris += (idx ? idx.count : o.geometry.getAttribute('position').count) / 3;
+    });
+
+    $('s-status').textContent = 'ready';
+    $('s-tris').textContent = tris.toLocaleString();
+    $('splash-msg').textContent = 'click to enter';
+    splash.classList.remove('busy');
+  },
+  ev => {
+    const mb = (ev.loaded / 1048576).toFixed(1);
+    $('splash-msg').textContent = `loading… ${mb} MB`;
+    $('s-status').textContent = `${mb} MB`;
+    splash.classList.add('busy');
+  },
+  err => {
+    $('s-status').textContent = 'failed';
+    $('splash-msg').textContent = 'load failed';
+    $('err').textContent = String(err && err.message || err);
+    splash.classList.remove('busy');
+  }
+);
+
+const clock = new THREE.Clock();
+const velocity = new THREE.Vector3();
+let fpsAccum = 0, fpsFrames = 0, callsAccum = 0;
+
+// Drive the counter reset explicitly rather than relying on where in render()
+// three chooses to auto-reset it.
+renderer.info.autoReset = false;
+
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.1);
+
+  const speed = (keys.has('ShiftLeft') ? 3000 : 900);
+  velocity.set(0, 0, 0);
+  if (keys.has('KeyW')) velocity.z += 1;
+  if (keys.has('KeyS')) velocity.z -= 1;
+  if (keys.has('KeyD')) velocity.x += 1;
+  if (keys.has('KeyA')) velocity.x -= 1;
+  if (velocity.lengthSq() > 0) {
+    velocity.normalize();
+    controls.moveForward(velocity.z * speed * dt);
+    controls.moveRight(velocity.x * speed * dt);
+  }
+  if (keys.has('Space')) camera.position.y += speed * dt;
+  if (keys.has('ControlLeft')) camera.position.y -= speed * dt;
+
+  renderer.info.reset();
+  renderer.render(scene, camera);
+  // Averaged over the interval: a single sampled frame can be one the browser
+  // skipped, which reads as zero and looks like nothing is drawing.
+  callsAccum += renderer.info.render.calls;
+
+  fpsAccum += dt; fpsFrames++;
+  if (fpsAccum >= 0.5) {
+    $('s-fps').textContent = Math.round(fpsFrames / fpsAccum);
+    $('s-calls').textContent = Math.round(callsAccum / fpsFrames).toLocaleString();
+    callsAccum = 0;
+    const p = camera.position;
+    $('s-pos').textContent = `${p.x | 0} ${p.y | 0} ${p.z | 0}`;
+    fpsAccum = 0; fpsFrames = 0;
+  }
+});
+</script>
+</body>
+</html>

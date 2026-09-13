@@ -1,0 +1,15 @@
+Mode: built-in imagegen
+Output: export/web/social/kino-preview-v1.png
+
+Use case: ads-marketing
+Asset type: social link preview for the playable Kino der Toten browser game, for X and Discord.
+Primary request: create polished cinematic horror game key art that is striking and readable as a small shared-link thumbnail.
+Scene/backdrop: a ruined early twentieth-century Berlin theater lobby, recognizable split staircases rising to balconies, a dusty chandelier, peeling plaster, dark wood, and heavy plain red curtains. A few shadowy zombie figures with dim amber eyes emerge from the darkness on the stairs. No graphic gore.
+Style/medium: richly detailed cinematic digital painting with restrained vintage film-poster texture, realistic architecture, strong silhouettes, professional game-cover finish.
+Composition/framing: wide landscape social card, approximately 1.91:1 aspect ratio, preferably 1536 by 800 pixels. The theater fills the frame, symmetrical architectural depth. The title dominates the central safe area; keep all lettering and main subjects comfortably inside 10 percent margins so modest social thumbnail cropping preserves them. No border. Full-bleed artwork.
+Lighting/mood: ominous, abandoned theater; warm dusty projector shafts and subtle red light against charcoal shadows, enough midtone detail to read on phones.
+Color palette: charcoal, muted warm stone, faded crimson curtains, distressed ivory lettering.
+Text (verbatim): "KINO" on the first line, "DER TOTEN" on the second line, and a smaller separate line beneath reading "SOLO SURVIVAL".
+Typography: massive bold condensed distressed ivory capitals, perfectly legible, carefully spaced; red understated accent under the title; balanced hierarchy. KINO and DER TOTEN together are the primary title.
+Constraints: only the three specified lines of text. No website URL, no extra brand logo, no watermarks, no HUD or interface elements. No Nazi symbols or other emblems on the curtains. Do not include a moon or space setting.
+

@@ -1,0 +1,166 @@
+#touch-controls[hidden], .touch-only { display: none; }
+body.touch-mode .touch-only { display: block; }
+body.touch-mode .touch-only[hidden] { display: none; }
+body.touch-mode { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+body.touch-mode canvas { touch-action: none; }
+/* A canvas left in normal flow can retain its old landscape width during
+   rotation, making mobile browsers shrink the entire page to fit it. */
+body.touch-mode > canvas { position: fixed; inset: 0; width: 100% !important; height: 100% !important; }
+#touch-controls {
+  --touch-size: 56px;
+  --touch-left: max(18px, env(safe-area-inset-left));
+  --touch-right: max(18px, env(safe-area-inset-right));
+  --touch-bottom: max(18px, env(safe-area-inset-bottom));
+  --fe-ui: Arial, sans-serif; --fe-accent: #e1c399;
+  position: fixed; inset: 0; z-index: 6; pointer-events: none;
+  color: #eaf9f2; font: 600 10px/1 var(--fe-ui); letter-spacing: .08em;
+  -webkit-touch-callout: none;
+}
+#touch-controls [data-touch], #touch-controls button { touch-action: none; pointer-events: auto; }
+#touch-controls.touch-disabled [data-touch] { pointer-events: none; opacity: .35; }
+.touch-look { position: absolute; inset: 0 0 0 44%; }
+.touch-move { position: absolute; left: var(--touch-left); bottom: var(--touch-bottom); width: 40%; height: 55%; }
+.touch-stick {
+  position: absolute; left: 92px; bottom: 12px; width: 136px; height: 136px;
+  margin-left: -68px; border: 1px solid #d9f8ec55; border-radius: 50%;
+  background: radial-gradient(circle, #b7f9d909 46%, #b7f9d915 47%, #b7f9d903 69%);
+  box-shadow: inset 0 0 18px #0003; pointer-events: none;
+}
+.touch-stick[style*="top:"] { margin-top: -68px; }
+.touch-stick span { position: absolute; bottom: -17px; width: 100%; text-align: center; color: #d6ebe5ad; font-size: 9px; }
+.touch-stick::before { content: '⌃'; position: absolute; top: -18px; width: 100%; text-align: center; color: #b8eed7a8; font-size: 22px; }
+.touch-knob {
+  position: absolute; left: 44px; top: 44px; width: 46px; height: 46px;
+  border: 1px solid #e0fff599; border-radius: 50%; background: #ccf7e426; box-shadow: 0 3px 12px #0004;
+}
+.touch-stick.engaged { border-color: #e0fff5a6; }
+.touch-stick.sprinting { border-color: var(--fe-accent); box-shadow: 0 0 12px #7fffc422; }
+.touch-stick.sprinting span { color: var(--fe-accent); }
+.touch-button {
+  position: absolute; width: var(--touch-size); height: var(--touch-size);
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  border-radius: 50%; border: 1px solid #dbf5ec66; background: #06131b70;
+  color: #edf9f5; font: inherit; text-shadow: 0 1px 4px #000;
+  -webkit-tap-highlight-color: transparent; padding: 0;
+}
+.touch-button svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.touch-button span { pointer-events: none; font-size: 9px; }
+.touch-button.pressed, .touch-button:active { border-color: var(--fe-accent); color: var(--fe-accent); background: #24533cd9; }
+.touch-button:focus-visible { outline: 2px solid var(--fe-accent); outline-offset: 4px; }
+.touch-fire { width: 82px; height: 82px; right: calc(var(--touch-right) + 69px); bottom: calc(var(--touch-bottom) + 76px); border: 2px solid #effff6a6; background: #0b202b66; }
+.touch-fire svg { width: 31px; height: 31px; }
+.touch-aim { right: calc(var(--touch-right) + 167px); bottom: calc(var(--touch-bottom) + 62px); }
+.touch-jump { right: var(--touch-right); bottom: calc(var(--touch-bottom) + 92px); }
+.touch-crouch { right: calc(var(--touch-right) + 14px); bottom: calc(var(--touch-bottom) + 20px); }
+.touch-reload { right: calc(var(--touch-right) + 94px); bottom: var(--touch-bottom); }
+.touch-pause, .touch-scores { top: max(12px, env(safe-area-inset-top)); width: 46px; height: 46px; border-radius: 12px; }
+.touch-pause { right: var(--touch-right); }
+.touch-scores { right: calc(var(--touch-right) + 56px); }
+.touch-hint { position: absolute; right: calc(var(--touch-right) + 22px); bottom: calc(var(--touch-bottom) + 178px); color: #d6ebe59c; font-size: 9px; text-shadow: 0 1px 5px #000; }
+.touch-settings { width: min(360px, 90vw); font-size: 12px; }
+.touch-settings label { display: flex; align-items: center; gap: 12px; }
+.touch-settings input { flex: 1; min-width: 80px; min-height: 44px; accent-color: var(--fe-accent); }
+.touch-settings select { flex: 1; min-width: 0; min-height: 44px; margin-left: auto; padding: 0 10px; border: 1px solid #b7dec955; border-radius: 5px; background: #14252e; color: #edf9f5; font: inherit; font-size: 16px; touch-action: manipulation; }
+.touch-settings output { min-width: 32px; }
+.touch-settings p { margin: 4px 0; color: #cddfe7a8; }
+
+.touch-use { right: calc(var(--touch-right) + 170px); bottom: var(--touch-bottom); }
+.touch-melee { right: calc(var(--touch-right) + 168px); bottom: calc(var(--touch-bottom) + 136px); }
+.touch-toolbar { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.touch-toolbar .touch-button { position: static; width: 52px; height: 44px; border-radius: 9px; }
+.touch-toolbar .touch-button span { font-size: 8px; letter-spacing: 0; }
+.touch-settings { width: 100%; max-width: 420px; margin-top: 16px; line-height: 1.6; }
+.touch-settings button { min-height: 44px; padding: 8px 16px; background: #20272b; border: 1px solid #889392; color: #e7ecea; }
+body.touch-mode #menu { align-items: flex-start; padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); touch-action: pan-y; overscroll-behavior: contain; }
+body.touch-mode .menu-content, body.touch-mode #menu .panel { margin: auto; flex-shrink: 0; width: min(560px, 100%); max-width: 100%; }
+body.touch-mode #menu button, body.touch-mode #menu a { min-height: 44px; touch-action: manipulation; }
+body.touch-mode #menu a { display: inline-flex; align-items: center; }
+body.touch-mode #start, body.touch-mode #restart, body.touch-mode #loading { max-width: 100%; }
+body.touch-mode .menu-controls, body.touch-mode .menu-side, body.touch-mode .controls, body.touch-mode #controls-hint, body.touch-mode .hint { display: none; }
+body.touch-mode #top { top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); max-width: 22%; font-size: 8px; letter-spacing: 1px; pointer-events: none; }
+body.touch-mode #location { font-size: 13px; margin-top: 5px; }
+body.touch-mode #round-panel { top: 70px; left: 12px; bottom: auto; pointer-events: none; }
+body.touch-mode #round { font-size: 25px; }
+body.touch-mode #remaining { font-size: 8px; }
+body.touch-mode #player-panel { top: 68px; left: 104px; bottom: auto; min-width: 0; pointer-events: none; }
+body.touch-mode .points { font-size: 22px; }
+body.touch-mode .health-track { width: 90px; margin-top: 5px; }
+body.touch-mode #weapon-panel { top: 65px; right: 12px; bottom: auto; max-width: 180px; pointer-events: none; }
+body.touch-mode #weapon-name { font-size: 10px; }
+body.touch-mode #ammo { margin-top: 3px; gap: 7px; }
+body.touch-mode #mag { font-size: 28px; }
+body.touch-mode #grenades { font-size: 8px; letter-spacing: .3px; }
+body.touch-mode #objective { top: 130px; left: 12px; max-width: 30%; font-size: 9px; }
+body.touch-mode #prompt { top: 48%; left: 50%; width: min(340px, 82%); transform: translateX(-50%); font-size: 12px; pointer-events: none; }
+body.touch-mode #toast, body.touch-mode #notice { top: 34%; font-size: 12px; width: 80%; text-align: center; pointer-events: none; }
+body.touch-mode #notice { left: 10%; }
+body.touch-mode #announcement { top: 28%; min-width: 0; width: 80%; }
+body.touch-mode #announcement-title { font-size: 25px; }
+body.touch-mode #effects { bottom: auto; top: 155px; font-size: 10px; pointer-events: none; }
+body.touch-mode .powerup-timer img { width: 25px; height: 25px; }
+body.touch-mode .location { top: 12px; left: 12px; max-width: 23%; }
+body.touch-mode .location .eyebrow { font-size: 8px; }
+body.touch-mode .location strong { font-size: 13px; }
+body.touch-mode .systems { top: 62px; right: 12px; gap: 1px; font-size: 8px; }
+body.touch-mode .round-display { top: 72px; left: 12px; bottom: auto; }
+body.touch-mode .round-display strong { font-size: 14px; }
+body.touch-mode #hud #round { font-size: 14px; line-height: 1.3; }
+body.touch-mode .round-display span { font-size: 8px; }
+body.touch-mode .vitals { top: 108px; left: 12px; bottom: auto; }
+body.touch-mode .vitals strong { font-size: 21px; }
+body.touch-mode .vitals span { font-size: 9px; }
+body.touch-mode .ammunition { top: 111px; right: 12px; bottom: auto; max-width: 180px; }
+body.touch-mode .ammunition strong { font-size: 24px; }
+body.touch-mode .ammunition span { font-size: 9px; }
+body.touch-mode #hud #perks { top: 114px; left: 92px; bottom: auto; gap: 4px; }
+body.touch-mode #hud #perks span { width: 24px; height: 24px; font-size: 8px; }
+body.touch-mode #equipment { top: 177px; right: 12px; bottom: auto; font-size: 9px; }
+body.touch-mode #hazard { top: 30%; font-size: 11px; }
+body.touch-mode #oxygen { bottom: auto; top: 42%; width: 240px; font-size: 10px; }
+body.touch-mode #journal { top: 58px; left: 50%; transform: translateX(-50%); padding: 12px; width: min(390px, 85vw); font-size: 12px; }
+body.touch-mode #journal p:last-child { font-size: 10px; }
+@media (max-height: 500px) {
+  body.touch-mode #menu h1 { font-size: 42px; }
+  body.touch-mode #menu .chapter, body.touch-mode #menu .eyebrow { margin: 10px 0; }
+  body.touch-mode .tagline, body.touch-mode .intro { margin: 10px 0; font-size: 14px; }
+  body.touch-mode .description, body.touch-mode .preview, body.touch-mode .local-note { display: none; }
+  body.touch-mode #menu #start { padding: 14px 18px; }
+  body.touch-mode .touch-settings { margin-top: 10px; font-size: 11px; }
+}
+@media (orientation: portrait) {
+  #touch-controls { --touch-left: max(8px, env(safe-area-inset-left)); --touch-right: max(10px, env(safe-area-inset-right)); --touch-size: 50px; }
+  .touch-stick { left: 60px; bottom: 30px; width: 116px; height: 116px; margin-left: -58px; }
+  .touch-stick[style*="top:"] { margin-top: -58px; }
+  .touch-knob { left: 34px; top: 34px; }
+  .touch-move { height: 38%; width: 38%; }
+  .touch-aim { right: calc(var(--touch-right) + 130px); bottom: calc(var(--touch-bottom) + 152px); }
+  .touch-fire { right: calc(var(--touch-right) + 43px); bottom: calc(var(--touch-bottom) + 88px); width: 76px; height: 76px; }
+  .touch-jump { bottom: calc(var(--touch-bottom) + 185px); }
+  .touch-crouch { right: var(--touch-right); bottom: calc(var(--touch-bottom) + 18px); }
+  .touch-reload { right: calc(var(--touch-right) + 74px); }
+  .touch-use { right: calc(var(--touch-right) + 66px); bottom: calc(var(--touch-bottom) + 224px); }
+  .touch-melee { right: var(--touch-right); bottom: calc(var(--touch-bottom) + 253px); }
+  .touch-toolbar { top: max(64px, calc(env(safe-area-inset-top) + 56px)); width: min(292px, 96%); flex-wrap: wrap; justify-content: center; }
+  body.touch-mode #top, body.touch-mode .location { max-width: 76%; }
+  body.touch-mode #round-panel, body.touch-mode .round-display { top: 163px; }
+  body.touch-mode #player-panel { top: 163px; }
+  body.touch-mode #weapon-panel { top: 225px; }
+  body.touch-mode #objective { top: 225px; max-width: 42%; }
+  body.touch-mode .vitals { top: 200px; }
+  body.touch-mode .systems { top: 163px; }
+  body.touch-mode .ammunition { top: 210px; }
+  body.touch-mode #hud #perks { top: 260px; left: 12px; }
+  body.touch-mode #equipment { top: 280px; }
+  body.touch-mode #effects { top: 310px; }
+  body.touch-mode #announcement { top: 29%; }
+  body.touch-mode #journal { top: 158px; }
+}
+@media (orientation: portrait) and (max-height: 650px) {
+  body.touch-mode #weapon-panel { top: 157px; max-width: 110px; }
+  body.touch-mode .systems { top: 159px; font-size: 7px; line-height: 1.2; }
+  body.touch-mode .ammunition { top: 194px; }
+  body.touch-mode #equipment { top: 235px; max-width: 120px; }
+  body.touch-mode #notice, body.touch-mode #toast { top: 40%; font-size: 10px; }
+  body.touch-mode #effects { top: 240px; }
+}
+

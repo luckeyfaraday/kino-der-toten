@@ -1,0 +1,29 @@
+{
+  "map": "zombie_coast",
+  "stage": "map-only",
+  "sources": [
+    {
+      "path": "zone/Common/zombie_coast.ff",
+      "bytes": 53530144,
+      "sha256": "318bd8d03fd4f660e75b35c6a26f0107547973ba38ef549a52d75a4f74aef8e3"
+    },
+    {
+      "path": "zone/Common/zombie_coast_patch.ff",
+      "bytes": 321504,
+      "sha256": "d0a3f755034dd750a9da5abbb73d3b68f2630ac51daad77e69d34738998e679c"
+    },
+    {
+      "path": "zone/English/en_zombie_coast.ff",
+      "bytes": 41920,
+      "sha256": "13c98b9e3599c1315aefd2375c57d50a1af49d85939832845ca78b64e7643663"
+    }
+  ],
+  "staticPlacements": 4751,
+  "entities": 4014,
+  "pipeline": "Kino T5 GfxWorld exporter, compose_scene_t5.py, serialized BVH, PlayerController",
+  "limits": [
+    "Browser lighting; native lightmaps and layered shaders are not reconstructed.",
+    "Render-mesh collision; native scripted transport and gameplay are not implemented.",
+    "Purchase doors open and purchase debris removed for exploration."
+  ]
+}

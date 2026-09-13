@@ -1,0 +1,118 @@
+import { chromium } from 'playwright-core';
+import fs from 'node:fs';
+import path from 'node:path';
+const out=path.resolve(import.meta.dirname,'../artifacts/moon/combat');fs.mkdirSync(out,{recursive:true});
+const executablePath=['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync);
+const browser=await chromium.launch({executablePath,headless:true,args:['--enable-webgl','--ignore-gpu-blocklist']});
+const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[],failed=[],checks=[];
+page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('response',r=>{if(r.status()>=400)failed.push(r.url()+' '+r.status());});
+const check=(name,passed,details=null)=>{checks.push({name,passed:!!passed,details});if(!passed)throw new Error(name+': '+JSON.stringify(details));console.log('PASS',name);};
+const snap=()=>page.evaluate(()=>moon.debug.snapshot());
+try{
+  await page.goto(process.env.MOON_URL??'http://127.0.0.1:5173/moon.html',{waitUntil:'load',timeout:180000});
+  await page.waitForFunction(()=>window.moon?.ready||document.querySelector('#error').textContent,null,{timeout:120000});
+  check('Survival loads with native weapon rig',await page.evaluate(()=>window.moon?.combat.view.ready),await page.locator('#error').textContent());
+  await page.screenshot({path:path.join(out,'menu.png')});
+  await page.locator('#start').click();await page.waitForFunction(()=>moon.debug.snapshot().active);
+  await page.evaluate(()=>moon.combat.session.effects.invulnerable=Infinity);
+  await page.waitForFunction(()=>moon.combat.enemies.list.length>0,null,{timeout:15000});
+  const initial=await snap();
+  check('No Man’s Land automatically spawns military-police zombies',initial.combat.area==='earth'&&initial.combat.enemies.length>0,initial.combat.enemies);
+  const before=await page.evaluate(()=>moon.combat.enemies.list[0].root.position.toArray());
+  await page.waitForTimeout(1500);
+  const after=await page.evaluate(()=>moon.combat.enemies.list[0].root.position.toArray());
+  check('Navigation moves zombies toward the player',Math.hypot(...before.map((v,i)=>v-after[i]))>15,{before,after});
+  await page.screenshot({path:path.join(out,'area51.png')});
+  // Place a native actor on reachable ground directly in front of the player.
+  await page.evaluate(async()=>{
+    const T=await import('/vendor/three.module.js'),c=moon.combat;
+    c.enemies.reset();c.enemies.spawnDelay=999;
+    const at=moon.player.getFeetPosition().clone(),target=at.clone().add(new T.Vector3(0,0,140));
+    const z=c.enemies.spawn(moon.navigation.closest(target));z.speed=0;z.baseSpeed=0;
+    moon.camera.lookAt(c.enemies.headPosition(z));
+  });
+  await page.waitForTimeout(250);
+  await page.evaluate(()=>moon.camera.lookAt(moon.combat.enemies.headPosition(moon.combat.enemies.list[0])));
+  const ammoBefore=(await snap()).combat.weapon.mag;
+  await page.mouse.down();await page.mouse.up();await page.waitForTimeout(220);
+  const shot=await snap();
+  check('Mouse fire consumes ammunition and damages a native zombie',shot.combat.weapon.mag===ammoBefore-1&&await page.evaluate(()=>moon.combat.session.hits>0),shot.combat);
+  await page.screenshot({path:path.join(out,'combat.png')});
+  await page.keyboard.press('KeyR');await page.waitForTimeout(100);
+  check('R starts native reload animation',await page.evaluate(()=>moon.combat.session.reloadLeft>0&&moon.combat.view.mode==='reload'));
+  await page.waitForFunction(()=>moon.combat.session.reloadLeft===0,null,{timeout:6000});
+  check('Reload transfers reserve ammunition',await page.evaluate(()=>moon.combat.session.weapon.mag===8&&moon.combat.session.weapon.reserve<32));
+  await page.evaluate(()=>{
+    const c=moon.combat,z=c.enemies.list[0],at=moon.player.getFeetPosition();
+    z.root.position.copy(moon.navigation.closest(at.clone().set(at.x,at.y,at.z+55)));
+    moon.camera.lookAt(z.root.position.clone().setY(z.root.position.y+44));
+    c.session.effects.invulnerable=0;
+  });
+  await page.waitForFunction(()=>moon.combat.session.health<100,null,{timeout:4000});
+  check('A nearby zombie attack damages the player',await page.evaluate(()=>moon.combat.session.health===50));
+  await page.evaluate(()=>moon.combat.session.effects.invulnerable=Infinity);
+  const knifePoints=await page.evaluate(()=>moon.combat.session.points);
+  await page.keyboard.press('KeyV');await page.waitForTimeout(60);
+  check('V starts the native knife animation',await page.evaluate(()=>moon.combat.view.mode==='melee'&&moon.combat.session.meleeLeft>0));
+  await page.keyboard.press('Digit1');
+  await page.waitForFunction(()=>moon.combat.enemies.list.length===0,null,{timeout:4000});
+  check('Knife strike awards 130 points and survives a blocked weapon switch',await page.evaluate(p=>moon.combat.session.points===p+130,knifePoints));
+  await page.waitForFunction(()=>moon.combat.session.meleeLeft===0);
+  await page.evaluate(()=>{
+    const c=moon.combat,at=moon.player.getFeetPosition(),z=c.enemies.spawn(moon.navigation.closest(at.clone().set(at.x,at.y,at.z+140)));
+    z.speed=0;z.baseSpeed=0;moon.camera.lookAt(z.root.position.clone().setY(z.root.position.y+44));
+  });
+  const grenadesBefore=await page.evaluate(()=>moon.combat.session.grenades);
+  await page.keyboard.press('KeyG');await page.waitForTimeout(100);
+  check('G throws a grenade and consumes inventory',await page.evaluate(n=>moon.combat.grenades.length===1&&moon.combat.session.grenades===n-1,grenadesBefore));
+  // Control the landing point to verify blast damage without depending on a random bounce.
+  await page.evaluate(()=>{const c=moon.combat,g=c.grenades[0];g.mesh.position.copy(c.enemies.list[0].root.position).y+=30;g.velocity.set(0,0,0);g.life=.1;});
+  await page.waitForFunction(()=>moon.combat.enemies.list.length===0&&moon.combat.grenades.length===0,null,{timeout:3000});
+  check('Grenade detonation kills an exposed nearby zombie',true);
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>!moon.debug.snapshot().active);
+  const pausedTime=await page.evaluate(()=>moon.combat.session.time);await page.waitForTimeout(300);
+  check('Pause freezes combat time',await page.evaluate(t=>moon.combat.session.time===t,pausedTime));
+  await page.locator('#start').click();await page.waitForFunction(()=>moon.debug.snapshot().active);
+  await page.evaluate(()=>{moon.debug.relocate('receiving');moon.state.equipSuit();moon.combat.session.effects.invulnerable=Infinity;});
+  await page.waitForFunction(()=>moon.combat.enemies.list.length>0,null,{timeout:15000});
+  const lunar=await snap();
+  check('Arrival starts Round 1 with Moon technicians',lunar.combat.round===1&&lunar.combat.total===6&&lunar.combat.area==='moon'&&lunar.combat.enemies.length>0,lunar.combat.enemies);
+  check('Lunar enemies use native low-gravity animation',await page.evaluate(()=>moon.combat.enemies.list.every(z=>z.lowGravity&&z.rig.data.walk.name.includes('moon'))));
+  await page.screenshot({path:path.join(out,'receiving.png')});
+  // Kill each emitted enemy; the director must eventually complete the wave.
+  await page.evaluate(()=>{const c=moon.combat;for(let i=0;i<2400&&c.session.round===1;i++){c.update(1/60,{moving:false,sprint:false});for(const z of [...c.enemies.list])c.enemies.hurt(z,10000,true);}});
+  check('Clearing a full wave advances to Round 2',await page.evaluate(()=>moon.combat.session.round===2),await snap());
+  await page.evaluate(()=>{const c=moon.combat;c.enemies.reset();c.enemies.spawnDelay=999;c.session.points=500;moon.player.setPosition(moon.camera.position.clone().set(420,2,-625));moon.camera.rotation.set(0,-Math.PI/2,0);});
+  await page.waitForTimeout(200);await page.keyboard.press('KeyF');
+  check('Door purchase rejects insufficient funds',await page.evaluate(()=>moon.combat.session.points===500&&!moon.opened.has('pf1344_auto361')));
+  const doorRoute=()=>page.evaluate(()=>{
+    const a=moon.camera.position.clone().set(390,2,-625),b=a.clone().setX(850),p=moon.navigation.path(a,b);
+    return {length:p.length,endDistance:p.length?p.at(-1).distanceTo(b):9999};
+  });
+  const closedRoute=await doorRoute();
+  check('Closed Receiving airlock blocks zombie navigation',closedRoute.length<2||closedRoute.endDistance>70,closedRoute);
+  await page.evaluate(()=>moon.combat.session.points=1000);await page.keyboard.press('KeyF');await page.waitForTimeout(700);
+  check('Door purchase charges the source price and unlocks its zone',await page.evaluate(()=>moon.combat.session.points===250&&moon.combat.session.flags.has('receiving_exit')&&moon.opened.has('pf1344_auto361')));
+  const openRoute=await doorRoute();
+  check('Purchased airlock opens a complete zombie route',openRoute.length>1&&openRoute.endDistance<25,openRoute);
+  await page.evaluate(()=>{moon.combat.session.points=2000;const e=moon.data.entities.find(e=>e.zombie_weapon_upgrade==='m14_zm');moon.player.setPosition(moon.camera.position.clone().set(e.position[0]-55,e.position[1]-58,e.position[2]));moon.camera.lookAt(moon.camera.position.clone().set(...e.position));});
+  await page.waitForTimeout(350);await page.keyboard.press('KeyF');
+  await page.waitForFunction(()=>moon.combat.view.ready&&moon.combat.session.weapon.id==='m14_zm',null,{timeout:5000});
+  check('Native M14 wall buy equips the second weapon and charges points',await page.evaluate(()=>moon.combat.session.inventory.length===2&&moon.combat.session.points===2000-moon.combat.data.weapons.m14_zm.price));
+  await page.keyboard.press('Digit1');await page.waitForFunction(()=>moon.combat.view.ready&&moon.combat.session.weapon.id==='m1911_zm');
+  check('Number keys switch weapons',await page.evaluate(()=>moon.combat.session.weapon.id==='m1911_zm'));
+  await page.evaluate(()=>{const c=moon.combat;c.session.weapon.reserve=0;c.session.grenades=0;c.pickups.spawn('full_ammo',moon.player.getFeetPosition());});
+  await page.waitForFunction(()=>moon.combat.session.weapon.reserve>0,null,{timeout:3000});
+  check('Walking into a native Max Ammo pickup restores reserves and grenades',await page.evaluate(()=>moon.combat.session.weapon.reserve===moon.combat.session.def.maxAmmo&&moon.combat.session.grenades===4&&moon.combat.pickups.items.length===0));
+  await page.evaluate(()=>{moon.combat.session.effects.invulnerable=0;moon.combat.damage(1000);});
+  await page.waitForFunction(()=>!moon.debug.snapshot().active);
+  check('Lethal damage ends survival',await page.evaluate(()=>moon.combat.session.phase==='gameover'&&moon.combat.session.health===0));
+  await page.locator('#start').click();await page.waitForFunction(()=>moon.debug.snapshot().active);
+  const reset=await snap();
+  check('Retry resets points, suit, power, weapons, round and doors',reset.combat.points===500&&reset.combat.round===1&&reset.combat.inventory.length===1&&!reset.hasSuit&&!reset.power&&!reset.doors.length&&reset.combat.health===100,reset.combat);
+  await page.evaluate(()=>{moon.debug.relocate('receiving');moon.state.exposure=14.95;});
+  await page.waitForFunction(()=>moon.combat.session.phase==='gameover',null,{timeout:3000});
+  check('Vacuum exposure ends an unprotected survival run',await page.evaluate(()=>!moon.debug.snapshot().active&&moon.combat.session.health===0));
+  check('No browser errors or missing assets',!errors.length&&!failed.length,{errors,failed});
+}catch(error){console.error(error);errors.push(String(error));process.exitCode=1;await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});}
+finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({checks,errors,failed},null,2));await browser.close();}

@@ -1,0 +1,25 @@
+{
+  "map": "zombie_coast",
+  "name": "coast",
+  "output": "export/web/coast",
+  "world": "export_coast/world/maps/zombie_coast.d3dbsp.gfxworld",
+  "entities": "export_coast/world/maps/zombie_coast.d3dbsp.ents",
+  "objDirs": [
+    "export_coast/zombie_coast/model_export",
+    "export_coast/en_zombie_coast/model_export",
+    "export_coast/zombie_coast_patch/model_export",
+    "export_coast/common_zombie/model_export",
+    "export/model_export",
+    "export_localized_obj/model_export"
+  ],
+  "assetDirs": [
+    "export_game/common",
+    "export_game/common_zombie",
+    "export_game/en_common_zombie",
+    "export_coast/zombie_coast",
+    "export_coast/en_zombie_coast",
+    "export_coast/zombie_coast_patch"
+  ],
+  "includeScriptModels": true,
+  "skipDistant": false
+}

@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-09-13T02:02:38.573469+00:00",
+  "url": "https://kino-der-toten.pages.dev/",
+  "imageUrl": "https://kino-der-toten.pages.dev/social/kino-preview-v1.png",
+  "width": 1737,
+  "height": 906,
+  "bytes": 2444372,
+  "sha256": "4d9b6c5e9a02bab18ad16072965b564b5cf0932b75452bb17e7bcb26236406d0",
+  "checks": [
+    {
+      "userAgent": "Twitterbot/1.0",
+      "pageStatus": 200,
+      "imageStatus": 200,
+      "contentType": "image/png",
+      "staticMetadata": "passed",
+      "imageMatchesLocal": true
+    },
+    {
+      "userAgent": "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)",
+      "pageStatus": 200,
+      "imageStatus": 200,
+      "contentType": "image/png",
+      "staticMetadata": "passed",
+      "imageMatchesLocal": true
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "cs": 4,
+    "ch": 2,
+    "walkableSlopeAngle": 48,
+    "walkableHeight": 35,
+    "walkableClimb": 9,
+    "walkableRadius": 4,
+    "maxEdgeLen": 48,
+    "maxSimplificationError": 1.3,
+    "minRegionArea": 8,
+    "mergeRegionArea": 20,
+    "maxVertsPerPoly": 6,
+    "detailSampleDist": 6,
+    "detailSampleMaxError": 1
+  },
+  "bytes": 557028,
+  "pathNodeSamples": 1400,
+  "collisionTriangles": 1635408
+}

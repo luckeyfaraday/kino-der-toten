@@ -1,0 +1,26 @@
+{
+  "map": "zombie_temple",
+  "name": "shangri-la",
+  "output": "export/web/shangri-la",
+  "world": "export_shangri_la/world/maps/zombie_temple.d3dbsp.gfxworld",
+  "entities": "export_shangri_la/world/maps/zombie_temple.d3dbsp.ents",
+  "objDirs": [
+    "export_shangri_la/zombie_temple_patch/model_export",
+    "export_shangri_la/en_zombie_temple/model_export",
+    "export_shangri_la/zombie_temple/model_export",
+    "export_shangri_la/common_zombie/model_export",
+    "export_shangri_la/common/model_export",
+    "export/model_export",
+    "export_localized_obj/model_export"
+  ],
+  "assetDirs": [
+    "export_game/common",
+    "export_game/common_zombie",
+    "export_game/en_common_zombie",
+    "export_shangri_la/zombie_temple",
+    "export_shangri_la/en_zombie_temple",
+    "export_shangri_la/zombie_temple_patch"
+  ],
+  "includeScriptModels": true,
+  "skipDistant": false
+}

@@ -1,0 +1,10 @@
+{
+  "map": "zombie_moon",
+  "staticInstances": 5939,
+  "scriptModels": 188,
+  "missingModels": [
+    "tag_origin"
+  ],
+  "materials": 443,
+  "textures": 378
+}

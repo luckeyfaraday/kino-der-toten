@@ -1,0 +1,35 @@
+# This workspace also contains an original game installation and extraction dumps.
+# Track the browser project explicitly; leave all other top-level files local.
+/*
+!/.gitignore
+!/.gitattributes
+!/*.md
+!/package.json
+!/package-lock.json
+!/wrangler.jsonc
+!/*.cmd
+!/.tools/
+!/test/
+!/export/
+/export/*
+!/export/web/
+!/artifacts/
+/artifacts/*
+!/artifacts/social-preview/
+
+# Local tools, credentials, dependencies, caches, and generated reports.
+node_modules/
+__pycache__/
+*.pyc
+*.exe
+*.dll
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.log
+*.pid
+.DS_Store
+Thumbs.db
