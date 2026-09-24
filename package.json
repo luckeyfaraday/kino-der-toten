@@ -51,7 +51,7 @@
     "test:ascension": "node .tools/test-ascension.mjs"
   },
   "dependencies": {
-    "three": "0.185.1",
+    "three": "0.186.0",
     "three-mesh-bvh": "0.9.14",
     "@recast-navigation/core": "0.43.1",
     "@recast-navigation/generators": "0.43.1"
