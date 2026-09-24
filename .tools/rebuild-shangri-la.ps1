@@ -1,4 +1,4 @@
-param([switch]$Extract, [string]$PatchedUnlinker = '~/oat/build/bin/Release_x64/Unlinker')
+param([switch]$Extract, [string]$PatchedUnlinker = '')
 $ErrorActionPreference = 'Stop'
 $shangriRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $shangriRoot
@@ -10,6 +10,7 @@ function Invoke-ShangriStep {
 Invoke-ShangriStep 'py' @('-3.11','-c','import PIL')
 if (-not (Test-Path -LiteralPath 'node_modules/three/package.json')) { Invoke-ShangriStep 'npm.cmd' @('ci') }
 if ($Extract) {
+    if (-not $PatchedUnlinker) { $PatchedUnlinker = (wsl.exe --exec sh -c 'printf %s $HOME') + '/oat/build/bin/Release_x64/Unlinker' }
     Invoke-ShangriStep '.tools/Unlinker.exe' @('--no-color','--include-assets','rawfile,xmodel,image,material','--model-format','OBJ','--image-format','DDS','--output-folder','export_shangri_la\?zone?',
         'zone/Common/zombie_temple.ff','zone/English/en_zombie_temple.ff','zone/Common/zombie_temple_patch.ff')
     Invoke-ShangriStep 'wsl.exe' @('--cd',$shangriRoot,'--exec',$PatchedUnlinker,'--no-color','--include-assets','gfxworld,clipmap,mapents','--output-folder','export_shangri_la/world','zone/Common/zombie_temple.ff')

@@ -1,4 +1,4 @@
-param([switch]$Extract, [string]$PatchedUnlinker = '~/oat/build/bin/Release_x64/Unlinker')
+param([switch]$Extract, [string]$PatchedUnlinker = '')
 $ErrorActionPreference = 'Stop'
 $ascensionRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $ascensionRoot
@@ -10,6 +10,7 @@ function Invoke-AscensionStep {
 Invoke-AscensionStep 'py' @('-3.11','-c','import PIL')
 if (-not (Test-Path -LiteralPath 'node_modules/three/package.json')) { Invoke-AscensionStep 'npm.cmd' @('ci') }
 if ($Extract) {
+    if (-not $PatchedUnlinker) { $PatchedUnlinker = (wsl.exe --exec sh -c 'printf %s $HOME') + '/oat/build/bin/Release_x64/Unlinker' }
     Invoke-AscensionStep '.tools/Unlinker.exe' @('--no-color','--include-assets','rawfile,xmodel,image,material','--model-format','OBJ','--image-format','DDS','--output-folder','export_ascension\?zone?',
         'zone/Common/zombie_cosmodrome.ff','zone/English/en_zombie_cosmodrome.ff','zone/Common/zombie_cosmodrome_patch.ff')
     Invoke-AscensionStep 'wsl.exe' @('--cd',$ascensionRoot,'--exec',$PatchedUnlinker,'--no-color','--include-assets','gfxworld,clipmap,mapents','--output-folder','export_ascension/world','zone/Common/zombie_cosmodrome.ff')

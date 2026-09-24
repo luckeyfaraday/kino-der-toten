@@ -1,4 +1,4 @@
-param([switch]$Extract, [string]$PatchedUnlinker = '~/oat/build/bin/Release_x64/Unlinker')
+param([switch]$Extract, [string]$PatchedUnlinker = '')
 $ErrorActionPreference = 'Stop'
 $coastRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $coastRoot
@@ -10,6 +10,7 @@ function Invoke-CoastStep {
 Invoke-CoastStep 'py' @('-3.11','-c','import PIL')
 if (-not (Test-Path -LiteralPath 'node_modules/three/package.json')) { Invoke-CoastStep 'npm.cmd' @('ci') }
 if ($Extract) {
+    if (-not $PatchedUnlinker) { $PatchedUnlinker = (wsl.exe --exec sh -c 'printf %s $HOME') + '/oat/build/bin/Release_x64/Unlinker' }
     Invoke-CoastStep '.tools/Unlinker.exe' @('--no-color','--include-assets','rawfile,xmodel,image,material','--model-format','OBJ','--image-format','DDS','--output-folder','export_coast\?zone?',
         'zone/Common/zombie_coast.ff','zone/English/en_zombie_coast.ff','zone/Common/zombie_coast_patch.ff')
     Invoke-CoastStep 'wsl.exe' @('--cd',$coastRoot,'--exec',$PatchedUnlinker,'--no-color','--include-assets','gfxworld,clipmap,mapents','--output-folder','export_coast/world','zone/Common/zombie_coast.ff')

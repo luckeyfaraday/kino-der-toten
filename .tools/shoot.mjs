@@ -2,7 +2,7 @@
 // Headless render check for the composed Kino scene.
 //   node .tools/shoot.mjs [url] [out.png]
 // Uses SwiftShader so it renders the same with or without a GPU.
-import { chromium } from '../../pluto_t6_full_game/node_modules/playwright-core/index.mjs';
+import { chromium } from 'playwright-core';
 import { existsSync } from 'node:fs';
 
 const URL = process.argv[2] || 'http://localhost:5173/';
