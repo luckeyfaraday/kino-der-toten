@@ -28,6 +28,7 @@ Start in No Man's Land with 500 points, an M1911 and four grenades. Reach the te
 - Thirty-three exported weapon definitions including Wave Gun/Zap modes and Death Machine, plus Gersh and QED equipment. Native first-person rigs, P.E.S. arms, firing/reload/melee animations, Bowie Knife, upgrades, projectile explosions, hit detection, ammunition economy and six standard power-ups.
 - Solo quest: Simon sequence; Hacker security terminals and timed buttons; Pi breach; linked native Vril Sphere route; first collector and Samantha reveal; Area 51 plates; wire/Vril charging; four collectors; soul exchange; final codes; QED/Gersh sequence; missile launch and destroyed Earth.
 - Native star-field/Earth textures, Samantha and quest props, station ambience, music recordings, computer/event cues and weapon audio. The Moon audio manifest contains 1,002 recovered cues.
+- No Man's Land water uses its original `zombiecoast__waves_bump` texture, recovered Area 51 colors and scrolling normal layers, with a static yard reflection. `.tools/build_moon_water.py` extracts the texture from the installed IWD and retains source hashes in `moon/water.json`.
 - Pause/resume, death/retry, objective journal, equipment/perk/hazard HUD, hack progress and F3 diagnostics. Small collision steps preserve timer speed on slower GPUs.
 
 ## Solo quest guide
