@@ -8,6 +8,7 @@ import { MoonNavigation } from './moon-navigation.js';
 import { MoonCombat } from './moon-combat.js';
 import { MoonFeatures } from './moon-features.js';
 import { MoonPresentation } from './moon-presentation.js';
+import { loadMoonWater } from './moon-water.js';
 import { createZombieTouch } from './zombies-touch.js';
 
 const $ = id => document.getElementById(id), keys = new Set(), errors = [];
@@ -23,7 +24,7 @@ const sun = new THREE.DirectionalLight(0xe7efff, 2.4); sun.position.set(-.6, 1, 
 const fill = new THREE.DirectionalLight(0x8191b3, .6); fill.position.set(1, .3, .5); scene.add(fill);
 const camera = new THREE.PerspectiveCamera(78, innerWidth/innerHeight, 1, 70000); camera.rotation.order = 'YXZ';
 let data, state, player, collision, ready = false, active = false, onMoon = false, checkpoint = 'area51', environment, target;
-let navigation, combat, features, presentation, mode = new URLSearchParams(location.search).get('mode') === 'explore' ? 'explore' : 'survival';
+let navigation, combat, features, presentation, water, mode = new URLSearchParams(location.search).get('mode') === 'explore' ? 'explore' : 'survival';
 let notice = '', noticeLeft = 0, debugVisible = false, frames = 0, frameTime = 0, fps = 0;
 const objects = new Map(), parts = new Map(), opened = new Set();
 const labels = {nml_zone: 'No Man’s Land', bridge_zone: 'Receiving Bay', water_zone: 'Lunar Surface', cata_left_start_zone: 'Tunnel 6', cata_left_middle_zone: 'Tunnel 6', cata_right_start_zone: 'Tunnel 11', cata_right_middle_zone: 'Tunnel 11', cata_right_end_zone: 'Tunnel 11', generator_zone: 'Power / MPD', generator_exit_east_zone: 'Laboratories', enter_forest_east_zone: 'Upper Laboratories', forest_zone: 'Biodome', tower_zone_east: 'Laboratories', tower_zone_east2: 'Laboratories'};
@@ -280,6 +281,7 @@ async function load() {
   $('status').textContent = 'Loading lunar geometry, textures and collision…';
   const [gltf, world] = await Promise.all([new GLTFLoader().loadAsync('moon/moon.gltf'), loadCollisionWorld({metadataUrl: 'moon/collision.json'})]);
   collision = world; scene.add(gltf.scene); scene.updateMatrixWorld(true);
+  water = await loadMoonWater(gltf.scene);
   const hazardIds=data.entities.filter(e=>['digger_hangar_blocker','digger_teleporter_blocker'].includes(e.targetname)).map(e=>e.id);
   const windowGroups=new Set(data.entities.filter(e=>e.targetname==='exterior_goal').map(e=>e.target));
   const windowIds=data.entities.filter(e=>windowGroups.has(e.targetname)&&e.script_noteworthy==='clip').map(e=>e.id);
@@ -310,7 +312,7 @@ async function load() {
   $('status').textContent='Preparing station systems and quest…';
   features=new MoonFeatures({data,state,combat,scene,camera,player,objects,opened,parts,navigation,notice:showNotice,raycast:rayIntersect});await features.load();
   presentation=new MoonPresentation(scene,camera,features);await presentation.load();
-  relocate('area51'); player.enabled = false; ready = true;setModeUi();
+  relocate('area51'); water.captureReflection(renderer, scene); player.enabled = false; ready = true;setModeUi();
   $('status').textContent = mode==='survival'?'500 points. M1911. Reach the teleporter and survive.':'Exploration: free doors and destination shortcuts.';
   $('new-run').disabled=false;$('explore').disabled=false;
   $('start').disabled = false; document.querySelectorAll('[data-destination]').forEach(b => b.disabled = false);
@@ -322,6 +324,7 @@ load().catch(error => { errors.push(String(error)); $('status').textContent = 'M
 let previous = performance.now();
 renderer.setAnimationLoop(now => {
   const dt = Math.max(0, (now-previous)/1000); previous = now;
+  if (active) water?.update(Math.min(.25, dt));
   // Preserve real-time timers on slower GPUs while keeping collision steps small.
   for(let remaining=Math.min(.25,dt);active&&remaining>0;){const step=Math.min(.05,remaining);update(step);remaining-=step;}
   renderer.clear();renderer.render(scene, camera);

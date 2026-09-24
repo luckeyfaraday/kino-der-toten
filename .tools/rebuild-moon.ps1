@@ -27,6 +27,7 @@ Invoke-MoonStep 'node' @('.tools/bake-moon.mjs')
 Invoke-MoonStep 'py' @('-3.11','.tools/build_moon_combat.py')
 Invoke-MoonStep 'py' @('-3.11','.tools/build_moon_audio.py')
 Invoke-MoonStep 'py' @('-3.11','.tools/build_moon_presentation.py')
+Invoke-MoonStep 'py' @('-3.11','.tools/build_moon_water.py')
 Invoke-MoonStep 'node' @('.tools/bake-moon-nav.mjs')
 Invoke-MoonStep 'node' @('--test','test/moon.test.mjs','test/moon-combat.test.mjs','test/moon-progression.test.mjs','test/moon-enemies.test.mjs')
 Write-Host 'Moon solo quest build complete. Double-click Play Moon.cmd to play.'
