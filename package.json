@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "three": "0.185.1",
-    "three-mesh-bvh": "0.9.14",
+    "three-mesh-bvh": "0.9.15",
     "@recast-navigation/core": "0.43.1",
     "@recast-navigation/generators": "0.43.1"
   },
