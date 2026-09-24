@@ -2,6 +2,17 @@
   "name": "kino-browser-zombies",
   "version": "0.1.0",
   "private": true,
+  "description": "Kino der Toten — an unofficial browser-based Three.js reconstruction of Black Ops Zombies.",
+  "author": "Luckey Faraday",
+  "license": "MIT",
+  "homepage": "https://kino-der-toten.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luckeyfaraday/kino-der-toten.git"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "type": "module",
   "scripts": {
     "cloudflare:stage": "npm run build:mobile && node .tools/stage-cloudflare.mjs",

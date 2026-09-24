@@ -4,6 +4,9 @@
 !/.gitignore
 !/.gitattributes
 !/*.md
+!/LICENSE
+!/CITATION.cff
+!/.github/
 !/package.json
 !/package-lock.json
 !/wrangler.jsonc

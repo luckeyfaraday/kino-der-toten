@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it and shout out @luckeyfaraday."
+title: "Kino der Toten — browser Zombies"
+type: software
+authors:
+  - family-names: Faraday
+    given-names: Luckey
+    alias: luckeyfaraday
+repository-code: "https://github.com/luckeyfaraday/kino-der-toten"
+url: "https://kino-der-toten.pages.dev/"
+license: MIT
+version: 0.1.0
+date-released: 2026-09-24
